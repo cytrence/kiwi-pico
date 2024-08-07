@@ -11,3 +11,4 @@ add_subdirectory(${LIBDVI_PATH}/libdvi ${CMAKE_BINARY_DIR}/libdvi_build)
 add_compile_options(-Wall)
 
 add_subdirectory(snake)
+add_subdirectory(frameDisplay)

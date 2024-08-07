@@ -1,4 +1,4 @@
-Cytrence Kiwi Demonstration with Raspberry Pi Pico
+Cytrence Kiwi Snake Game Demonstration with Raspberry Pi Pico
 =========================================
 
 Here at Cytrence, we are revolutionizing how computers and microcontrollers interact with our portable laptops. The Kiwi allows you to connect all sorts of devices, from mini PCs to microcontrollers to your laptop, to act as an external monitor as well as utilize its keyboard and mouse functionality.
@@ -28,3 +28,21 @@ Another powerful feature of the Kiwi is its ability to connect to any compatible
 ![](img/kiwiSetupDebug.jpeg)
 
 While developing the snake game, the debug terminal was integral to checking initializations and I/O.
+
+
+Cytrence Kiwi Frame Number Display with Raspberry Pi Pico
+=========================================
+
+This program is designed to run on the Raspberry Pi Pico and displays an incrementing frame number on a connected DVI display. The frame number starts from 0 and increments by 1 at a rate of 60 Hz. The display resolution is set to 320x240 pixels.
+
+Features
+--------
+- Smooth Frame Rate: Displays frame numbers at a consistent 60 frames per second for smooth visuals.
+- Dual-Core Processing: Utilizes both cores of the Raspberry Pi Pico to efficiently handle DVI output and framebuffer updates.
+- Customizable Display Resolution: The display resolution is set to 320x240 pixels but can be modified to fit different screen sizes and DVI timing configurations.
+- Adjustable Frame Intervals: Frame intervals are configurable, allowing for fine-tuning of display refresh rates:
+  - FRAME_INTERVAL_1: Set to 16666 microseconds.
+  - FRAME_INTERVAL_2: Set to 16667 microseconds.
+- Configurable Maximum Number: The program allows customization of the maximum frame number (MAX_NUMBER) before resetting back to 0.
+- Frame Count Target: The target number of frames (FRAME_COUNT_TARGET) can be set to measure performance over a defined interval.
+- Efficient Framebuffer Management: Includes functions to initialize, reset, and update the framebuffer for dynamic and responsive display updates.
