@@ -1,0 +1,53 @@
+# Choose a base style; LLVM is a common choice for projects involving C++ and Objective-C++
+BasedOnStyle: LLVM
+
+# Brace wrapping options
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass:      true
+  AfterControlStatement: true
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+
+# Indentation widths
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Pointer and reference alignment
+PointerAlignment: Left
+
+# Column limit can be adjusted as per preference
+ColumnLimit: 120
+
+# Include ordering can be particularly useful in mixed language projects
+IncludeCategories:
+  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority:        2
+  - Regex:           '.*'
+    Priority:        3
+  - Regex:           '^(<|"(gtest|isl|json)/)'
+    Priority:        4
+  - Regex:           '.*\.(h|hpp)$'
+    Priority:        1
+  - Regex:           '.*\.(m|mm)$'
+    Priority:        2
+
+# Objective-C specific options
+ObjCSpaceAfterProperty: true
+ObjCSpaceBeforeProtocolList: true
+ObjCBlockIndentWidth: 4
+
+# Other formatting options
+SortIncludes: true
+#AlignConsecutiveAssignments: true
+#AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: true
+AllowShortFunctionsOnASingleLine: None
