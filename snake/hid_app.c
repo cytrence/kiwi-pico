@@ -24,8 +24,8 @@
  */
 
 #include "bsp/board.h"
-#include "tusb.h"
 #include "main.h"
+#include "tusb.h"
 
 //--------------------------------------------------------------------+
 // MACRO TYPEDEF CONSTANT ENUM DECLARATION
@@ -33,26 +33,27 @@
 
 // If your host terminal support ansi escape code such as TeraTerm
 // it can be use to simulate mouse cursor movement within terminal
-#define USE_ANSI_ESCAPE   0
+#define USE_ANSI_ESCAPE 0
 
-#define MAX_REPORT  4
+#define MAX_REPORT 4
 
-static uint8_t const keycode2ascii[128][2] =  { HID_KEYCODE_TO_ASCII };
+static uint8_t const keycode2ascii[128][2] = {HID_KEYCODE_TO_ASCII};
 
 // Each HID instance can has multiple reports
 static struct
 {
-  uint8_t report_count;
-  tuh_hid_report_info_t report_info[MAX_REPORT];
-}hid_info[CFG_TUH_HID];
+    uint8_t report_count;
+    tuh_hid_report_info_t report_info[MAX_REPORT];
+} hid_info[CFG_TUH_HID];
 
-static void process_kbd_report(hid_keyboard_report_t const *report);
-// static void process_mouse_report(hid_mouse_report_t const * report);                                           Commented out because not used in the snake game
-// static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);   Commented out because not used in the snake game
+static void process_kbd_report(hid_keyboard_report_t const* report);
+// static void process_mouse_report(hid_mouse_report_t const * report); Commented out because not used in the snake game
+// static void process_generic_report(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
+// Commented out because not used in the snake game
 
 void hid_app_task(void)
 {
-  // nothing to do
+    // nothing to do
 }
 
 //--------------------------------------------------------------------+
@@ -66,137 +67,141 @@ void hid_app_task(void)
 // therefore report_desc = NULL, desc_len = 0
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len)
 {
-  printf("HID device address = %d, instance = %d is mounted\r\n", dev_addr, instance);
+    printf("HID device address = %d, instance = %d is mounted\r\n", dev_addr, instance);
 
-  // Interface protocol (hid_interface_protocol_enum_t)
-  const char* protocol_str[] = { "None", "Keyboard", "Mouse" };
-  uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+    // Interface protocol (hid_interface_protocol_enum_t)
+    const char* protocol_str[] = {"None", "Keyboard", "Mouse"};
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 
-  printf("HID Interface Protocol = %s\r\n", protocol_str[itf_protocol]);
+    printf("HID Interface Protocol = %s\r\n", protocol_str[itf_protocol]);
 
-  // By default host stack will use activate boot protocol on supported interface.
-  // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
-  if ( itf_protocol == HID_ITF_PROTOCOL_NONE )
-  {
-    hid_info[instance].report_count = tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
-    printf("HID has %u reports \r\n", hid_info[instance].report_count);
-  }
+    // By default host stack will use activate boot protocol on supported interface.
+    // Therefore for this simple example, we only need to parse generic report descriptor (with built-in parser)
+    if (itf_protocol == HID_ITF_PROTOCOL_NONE)
+    {
+        hid_info[instance].report_count =
+            tuh_hid_parse_report_descriptor(hid_info[instance].report_info, MAX_REPORT, desc_report, desc_len);
+        printf("HID has %u reports \r\n", hid_info[instance].report_count);
+    }
 
-  // request to receive report
-  // tuh_hid_report_received_cb() will be invoked when report is available
-  if ( !tuh_hid_receive_report(dev_addr, instance) )
-  {
-    printf("Error: cannot request to receive report\r\n");
-  }
+    // request to receive report
+    // tuh_hid_report_received_cb() will be invoked when report is available
+    if (!tuh_hid_receive_report(dev_addr, instance))
+    {
+        printf("Error: cannot request to receive report\r\n");
+    }
 }
 
 // Invoked when device with hid interface is un-mounted
 void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance)
 {
-  printf("HID device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
+    printf("HID device address = %d, instance = %d is unmounted\r\n", dev_addr, instance);
 }
 
 // Invoked when received report from device via interrupt endpoint
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len)
 {
-  uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 
-  switch (itf_protocol)
-  {
+    switch (itf_protocol)
+    {
     case HID_ITF_PROTOCOL_KEYBOARD:
-      TU_LOG2("HID receive boot keyboard report\r\n");
-      process_kbd_report( (hid_keyboard_report_t const*) report );
-    break;
+        TU_LOG2("HID receive boot keyboard report\r\n");
+        process_kbd_report((hid_keyboard_report_t const*)report);
+        break;
 
     case HID_ITF_PROTOCOL_MOUSE:
-      // TU_LOG2("HID receive boot mouse report\r\n");
-      // process_mouse_report( (hid_mouse_report_t const*) report );    Commented out because not used in the snake game
-    break;
+        // TU_LOG2("HID receive boot mouse report\r\n");
+        // process_mouse_report( (hid_mouse_report_t const*) report );    Commented out because not used in the snake
+        // game
+        break;
 
     default:
-      // Generic report requires matching ReportID and contents with previous parsed report info
-      // process_generic_report(dev_addr, instance, report, len);       Commented out because not used in the snake game
-    break;
-  }
-
-  // continue to request to receive report
-  if ( !tuh_hid_receive_report(dev_addr, instance) )
-  {
-    printf("Error: cannot request to receive report\r\n");
-  }
-
-  ////////////////////////////////////////////////////////////////////// Added code
-  uint8_t keycode = 0;
-  if (len == 8)
-  {
-      // Normal keyboard byt keycode location
-      keycode = report[2];
-  }
-  else if (len == 9)
-  {
-      // Kiwi keyboard byt keycode location
-      keycode = report[3];
-  }
-  else
-  {
-      return;
-  }
-  
-  int new_direction = -1;
-
-  switch(keycode)
-  {
-      case 0x04: // 'a'
-          new_direction = 3; // left
-          break;
-      case 0x07: // 'd'
-          new_direction = 1; // right
-          break;
-      case 0x1a: // 'w'
-          new_direction = 0; // up
-          break;
-      case 0x16: // 's'
-          new_direction = 2; // down
-          break;
-      case 0x50: // 'left arrow'
-          new_direction = 3; // left
+        // Generic report requires matching ReportID and contents with previous parsed report info
+        // process_generic_report(dev_addr, instance, report, len);       Commented out because not used in the snake
+        // game
         break;
-      case 0x4F: // 'right arrow'
-          new_direction = 1; // right
-          break;
-      case 0x52: // 'up arrow'
-          new_direction = 0; // up
-          break;
-      case 0x51: // 'down arrow'
-          new_direction = 2; // down
-          break;
-      case 0x29: // 'ESC'
-          reset_game();
-          printf("RESET GAME\r\n");
-      default:
-          break;
-  }
+    }
 
-  // Check if the new direction is directly opposite to the current direction
-  if (new_direction != -1 && !((new_direction == 0 && snake_direction == 2) || // Up to Down
-      (new_direction == 2 && snake_direction == 0) || // Down to Up
-      (new_direction == 1 && snake_direction == 3) || // Right to Left
-      (new_direction == 3 && snake_direction == 1)))  // Left to Right
-  {
-      // Only update and move snake if not reversing direction
-      if (new_direction != snake_direction)
-      {
-          snake_direction = new_direction;
-      }
-  }
+    // continue to request to receive report
+    if (!tuh_hid_receive_report(dev_addr, instance))
+    {
+        printf("Error: cannot request to receive report\r\n");
+    }
 
-  
-  printf("Keycode: %02X\r\n", keycode);
+    ////////////////////////////////////////////////////////////////////// Added code
+    uint8_t keycode = 0;
+    if (len == 8)
+    {
+        // Normal keyboard byt keycode location
+        keycode = report[2];
+    }
+    else if (len == 9)
+    {
+        // Kiwi keyboard byt keycode location
+        keycode = report[3];
+    }
+    else
+    {
+        return;
+    }
 
-  static bool led_state = true;       //added
-  led_state = !led_state;             //added
-  board_led_write(led_state);         //added
+    direction_t new_direction = DIRECTION_UNKNOWN;
+
+    switch (keycode)
+    {
+    case 0x04: // 'a'
+        new_direction = DIRECTION_LEFT;
+        break;
+    case 0x07: // 'd'
+        new_direction = DIRECTION_RIGHT;
+        break;
+    case 0x1a: // 'w'
+        new_direction = DIRECTION_UP;
+        break;
+    case 0x16: // 's'
+        new_direction = DIRECTION_DOWN;
+        break;
+    case 0x50: // 'left arrow'
+        new_direction = DIRECTION_LEFT;
+        break;
+    case 0x4F: // 'right arrow'
+        new_direction = DIRECTION_RIGHT;
+        break;
+    case 0x52: // 'up arrow'
+        new_direction = DIRECTION_UP;
+        break;
+    case 0x51: // 'down arrow'
+        new_direction = DIRECTION_DOWN;
+        break;
+    case 0x29: // 'ESC'
+        reset_game();
+        printf("RESET GAME\r\n");
+    default:
+        break;
+    }
+
+    // Check if the new direction is directly opposite to the current direction
+    if (new_direction != DIRECTION_UNKNOWN &&
+        !((new_direction == DIRECTION_UP && snake_direction == DIRECTION_DOWN) ||    // Up to Down
+          (new_direction == DIRECTION_DOWN && snake_direction == DIRECTION_UP) ||    // Down to Up
+          (new_direction == DIRECTION_RIGHT && snake_direction == DIRECTION_LEFT) || // Right to Left
+          (new_direction == DIRECTION_LEFT && snake_direction == DIRECTION_RIGHT)))  // Left to Right
+    {
+        // Only update and move snake if not reversing direction
+        if (new_direction != snake_direction)
+        {
+            snake_direction = new_direction;
+        }
+    }
+
+    printf("Keycode: %02X\r\n", keycode);
+
+    static bool led_state = true; // added
+    led_state = !led_state;       // added
+    board_led_write(led_state);   // added
 }
+
 ////////////////////////////////////////////////////////////////////////
 
 //--------------------------------------------------------------------+
@@ -204,44 +209,48 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 //--------------------------------------------------------------------+
 
 // look up new key in previous keys
-static inline bool find_key_in_report(hid_keyboard_report_t const *report, uint8_t keycode)
+static inline bool find_key_in_report(hid_keyboard_report_t const* report, uint8_t keycode)
 {
-  for(uint8_t i=0; i<6; i++)
-  {
-    if (report->keycode[i] == keycode)  return true;
-  }
-
-  return false;
-}
-
-static void process_kbd_report(hid_keyboard_report_t const *report)
-{
-  static hid_keyboard_report_t prev_report = { 0, 0, {0} }; // previous report to check key released
-
-  //------------- example code ignore control (non-printable) key affects -------------//
-  for(uint8_t i=0; i<6; i++)
-  {
-    if ( report->keycode[i] )
+    for (uint8_t i = 0; i < 6; i++)
     {
-      if ( find_key_in_report(&prev_report, report->keycode[i]) )
-      {
-        // exist in previous report means the current key is holding
-      }else
-      {
-        // not existed in previous report means the current key is pressed
-        bool const is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
-        uint8_t ch = keycode2ascii[report->keycode[i]][is_shift ? 1 : 0];
-        putchar(ch);
-        if ( ch == '\r' ) putchar('\n'); // added new line for enter key
-
-        fflush(stdout); // flush right away, else nanolib will wait for newline
-      }
+        if (report->keycode[i] == keycode)
+            return true;
     }
-    // TODO example skips key released
-  }
 
-  prev_report = *report;
+    return false;
 }
+
+static void process_kbd_report(hid_keyboard_report_t const* report)
+{
+    static hid_keyboard_report_t prev_report = {0, 0, {0}}; // previous report to check key released
+
+    //------------- example code ignore control (non-printable) key affects -------------//
+    for (uint8_t i = 0; i < 6; i++)
+    {
+        if (report->keycode[i])
+        {
+            if (find_key_in_report(&prev_report, report->keycode[i]))
+            {
+                // exist in previous report means the current key is holding
+            }
+            else
+            {
+                // not existed in previous report means the current key is pressed
+                bool const is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
+                uint8_t ch = keycode2ascii[report->keycode[i]][is_shift ? 1 : 0];
+                putchar(ch);
+                if (ch == '\r')
+                    putchar('\n'); // added new line for enter key
+
+                fflush(stdout); // flush right away, else nanolib will wait for newline
+            }
+        }
+        // TODO example skips key released
+    }
+
+    prev_report = *report;
+}
+
 /*
 //--------------------------------------------------------------------+
 // Mouse
